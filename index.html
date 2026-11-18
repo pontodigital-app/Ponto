@@ -1,3 +1,9 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,Segoe UI,Roboto,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Folha de Ponto</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap">
@@ -24,6 +30,7 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{
   background:var(--bg); color:var(--fg); font:400 15px/1.45 var(--body);
   padding-left:max(16px,env(safe-area-inset-left,0px));
@@ -140,6 +147,8 @@ input.t.bad{border-color:var(--bad);background:var(--bad-bg)}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
+</head>
+<body>
 <div class="wrap">
   <header class="top">
     <h1>Folha de Ponto</h1>
@@ -667,3 +676,5 @@ document.addEventListener('keydown',function(e){
 loadSheet();paint();
 })();
 </script>
+</body>
+</html>
