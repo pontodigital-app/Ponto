@@ -14,20 +14,9 @@
   --accent:#1d4f91; --accent-fg:#ffffff;
   --ok:#177245; --bad:#b3261e; --bad-bg:#fbe9e7;
   --paper:#ffffff; --pen:#111111;
+  color-scheme:light;
   --display:"Space Grotesk",system-ui,sans-serif;
   --body:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#0e1621; --surface:#17212e; --fg:#e5ebf2; --muted:#9aabbd; --line:#2a384a;
-    --accent:#7fb0f0; --accent-fg:#0b1522; --ok:#6fd09a; --bad:#ff9a92; --bad-bg:#3a1c1a;
-    color-scheme:dark;
-  }
-}
-:root[data-theme="dark"]{
-  --bg:#0e1621; --surface:#17212e; --fg:#e5ebf2; --muted:#9aabbd; --line:#2a384a;
-  --accent:#7fb0f0; --accent-fg:#0b1522; --ok:#6fd09a; --bad:#ff9a92; --bad-bg:#3a1c1a;
-  color-scheme:dark;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -144,6 +133,23 @@ input.t.bad{border-color:var(--bad);background:var(--bad-bg)}
 }
 .toast.show{opacity:1}
 @media (prefers-reduced-motion:reduce){.toast{transition:none}}
+.mkgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
+.mkb{padding:0 8px}
+.day.k-falta .mk{grid-column:2/4}
+.mk{display:none;grid-column:2;align-items:center;justify-content:space-between;gap:8px;min-height:44px;padding:0 6px 0 12px;border-radius:8px;background:var(--bg);border:1px dashed var(--line)}
+.mkt{font:700 15px var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.day.k-ferias .mkt{color:var(--ok)}
+.day.k-falta .mkt{color:var(--bad)}
+.mkx{min-height:36px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font:600 13px var(--body);cursor:pointer}
+.day.marked .mk{display:flex}
+.day.marked .tm{display:none}
+.day.k-falta .sg{display:none}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal .dw{text-align:center;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;padding:4px 0}
+.cal button{height:44px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg);font:600 15px var(--body);font-variant-numeric:tabular-nums;cursor:pointer;padding:0}
+.cal .blank{visibility:hidden}
+.cal button.in{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.cal button.edge{outline:2px solid var(--fg);outline-offset:-3px}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -182,10 +188,14 @@ input.t.bad{border-color:var(--bad);background:var(--bad-bg)}
     <p class="hint">Você desenha uma vez. A mesma assinatura vale para cada dia e para o rodapé do empregado.</p>
   </section>
 
-  <details class="card opts">
+  <details class="card opts" open>
     <summary>Opções</summary>
-    <label class="f">Escala 12x36: primeiro dia de trabalho<select id="inicio"></select></label>
-    <p class="hint">A escala só destaca os dias de trabalho para você achar mais rápido. Os horários são sempre os que você digita.</p>
+    <div class="mkgrid" role="group" aria-label="Marcar período">
+      <button type="button" class="btn mkb" data-k="ferias">Férias</button>
+      <button type="button" class="btn mkb" data-k="falta">Falta</button>
+      <button type="button" class="btn mkb" data-k="atestado">Atestado</button>
+    </div>
+    <p class="hint">Toque em um deles e escolha no calendário o primeiro e o último dia. A palavra entra nos horários do seu turno, nesses dias. Em férias e atestado você assina normal; na falta não assina.</p>
     <div class="rowbtns">
       <button type="button" id="btnAll" class="btn">Assinar dias preenchidos</button>
       <button type="button" id="btnClear" class="btn ghost">Limpar o mês</button>
@@ -209,7 +219,7 @@ input.t.bad{border-color:var(--bad);background:var(--bad-bg)}
         <button type="button" id="padClear" class="btn" disabled>Limpar tudo</button>
       </div>
     </div>
-    <p class="padtip">Dica: vire o celular de lado para ter mais espaço. "Voltar" desfaz o último traço.</p>
+    <p class="padtip">Dica: vire o celular de lado para ter mais espaço. "Voltar" desfaz o último traço. A linha aqui é fina para assinar com precisão e fica mais grossa quando você salva.</p>
     <div class="padwrap">
       <canvas id="pad" aria-label="Área para desenhar a assinatura"></canvas>
       <div class="padline"></div>
@@ -234,6 +244,19 @@ input.t.bad{border-color:var(--bad);background:var(--bad-bg)}
   </div>
 </div>
 
+<div class="sheet" id="calSheet" hidden role="dialog" aria-modal="true" aria-labelledby="calT">
+  <div class="box">
+    <h2 id="calT">Férias</h2>
+    <p class="meta" id="calMonth"></p>
+    <div class="cal" id="cal"></div>
+    <p class="meta" id="calInfo">Toque no primeiro dia.</p>
+    <div class="actions">
+      <button type="button" id="calCancel" class="btn ghost">Cancelar</button>
+      <button type="button" id="calApply" class="btn primary" disabled>Marcar na folha</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -242,6 +265,7 @@ input.t.bad{border-color:var(--bad);background:var(--bad-bg)}
 var MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 var SEM=['dom','seg','ter','qua','qui','sex','sáb'];
 var PL=['Antes do intervalo','Depois do intervalo','Turno direto'];
+var MK={ferias:'Férias',falta:'Falta',atestado:'Atestado'};
 function $(s){return document.querySelector(s);}
 function pad2(n){return (n<10?'0':'')+n;}
 var store={
@@ -271,7 +295,7 @@ var sheet,pending=null,fileOut=null;
 function sheetKey(){return 'fp:folha:'+ano+'-'+pad2(mes);}
 function loadSheet(){
   sheet=store.get(sheetKey())||{};
-  sheet.t=sheet.t||{};sheet.s=sheet.s||{};sheet.footOff=!!sheet.footOff;sheet.inicio=sheet.inicio||0;
+  sheet.t=sheet.t||{};sheet.s=sheet.s||{};sheet.footOff=!!sheet.footOff;sheet.mark=sheet.mark||{};
 }
 var saveTimer;
 function save(){
@@ -290,10 +314,8 @@ function toast(msg){
 }
 
 /* ---------- montagem da tela ---------- */
-var selMes=$('#mes'),selIni=$('#inicio'),ol=$('#dias');
+var selMes=$('#mes'),ol=$('#dias');
 for(var m=1;m<=12;m++){var om=document.createElement('option');om.value=m;om.textContent=m;selMes.appendChild(om);}
-var o0=document.createElement('option');o0.value=0;o0.textContent='Sem escala';selIni.appendChild(o0);
-for(var n=1;n<=31;n++){var o=document.createElement('option');o.value=n;o.textContent='Dia '+n;selIni.appendChild(o);}
 
 for(var d=1;d<=31;d++){
   var li=document.createElement('li');li.className='day';li.dataset.d=d;
@@ -306,8 +328,9 @@ for(var d=1;d<=31;d++){
     }
     pairs+='</div>';
   }
-  li.innerHTML='<div class="dn"><b>'+d+'</b><span class="wd"></span><em class="pill">escala</em></div>'+
+  li.innerHTML='<div class="dn"><b>'+d+'</b><span class="wd"></span></div>'+
     '<div class="tm">'+pairs+'</div>'+
+    '<div class="mk"><b class="mkt"></b><button type="button" class="mkx" data-d="'+d+'">Remover</button></div>'+
     '<button type="button" class="sg" data-d="'+d+'" aria-pressed="false">Assinar</button>';
   ol.appendChild(li);
 }
@@ -331,15 +354,17 @@ function paintSigCard(){
 }
 function paint(){
   var max=dim();
-  selMes.value=mes;$('#ano').value=ano;selIni.value=sheet.inicio;
+  selMes.value=mes;$('#ano').value=ano;
   $('#nome').value=perfil.nome||'';$('#horario').value=perfil.horario||'';
   applyTurno();
   for(var d=1;d<=31;d++){
     var li=ol.children[d-1];li.hidden=d>max;
     if(d>max)continue;
     li.querySelector('.wd').textContent=SEM[new Date(ano,mes-1,d).getDay()];
-    var work=sheet.inicio>0&&((((d-sheet.inicio)%2)+2)%2===0);
-    li.classList.toggle('work',work);li.classList.toggle('rest',sheet.inicio>0&&!work);
+    var mk=sheet.mark[d];
+    li.classList.toggle('marked',!!mk);
+    li.classList.remove('k-ferias','k-falta','k-atestado');
+    if(mk){li.classList.add('k-'+mk);li.querySelector('.mkt').textContent=MK[mk];}
     var arr=sheet.t[d]||[];
     for(var i=0;i<6;i++){
       var inp=li.querySelector('[data-i="'+i+'"]');
@@ -368,6 +393,8 @@ ol.addEventListener('focusout',function(e){
   if(el.classList&&el.classList.contains('t'))el.classList.toggle('bad',!!el.value&&!valid(el.value));
 });
 ol.addEventListener('click',function(e){
+  var x=e.target.closest?e.target.closest('.mkx'):null;
+  if(x){delete sheet.mark[+x.dataset.d];save();paint();return;}
   var b=e.target.closest?e.target.closest('.sg'):null;if(!b)return;
   var d=+b.dataset.d;
   if(sheet.s[d]&&sig){delete sheet.s[d];}
@@ -384,7 +411,6 @@ $('#ano').addEventListener('input',function(){
   this.value=this.value.replace(/\D/g,'').slice(0,4);
   if(this.value.length===4){var a=+this.value;if(a>=2000&&a<=2100){ano=a;loadSheet();paint();}}
 });
-selIni.addEventListener('change',function(){sheet.inicio=+this.value;save();paint();});
 Array.prototype.forEach.call(document.querySelectorAll('input[name="turno"]'),function(r){
   r.addEventListener('change',function(){
     perfil.turno=this.value;store.set('fp:perfil',perfil);applyTurno();
@@ -396,7 +422,9 @@ function signAll(){
   var max=dim(),c=0;
   for(var d=1;d<=max;d++){
     var a=sheet.t[d]||[];
-    if(filled(a)&&!sheet.s[d]){sheet.s[d]=true;c++;}
+    var mkd=sheet.mark[d];
+    if(mkd==='falta'||sheet.s[d])continue;
+    if(mkd||filled(a)){sheet.s[d]=true;c++;}
   }
   save();paint();
   toast(c?c+(c===1?' dia assinado':' dias assinados'):'Nenhum dia preenchido para assinar');
@@ -414,7 +442,7 @@ $('#btnClear').addEventListener('click',function(){
     return;
   }
   clearArmed=false;clearTimeout(clearT);b.textContent='Limpar o mês';
-  sheet.t={};sheet.s={};sheet.footOff=false;save();paint();toast('Mês limpo');
+  sheet.t={};sheet.s={};sheet.mark={};sheet.footOff=false;save();paint();toast('Mês limpo');
 });
 $('#btnFoot').addEventListener('click',function(){
   if(!sig){pending={type:'foot'};openPad();return;}
@@ -422,22 +450,22 @@ $('#btnFoot').addEventListener('click',function(){
 });
 
 /* ---------- assinatura ---------- */
-var cv=$('#pad'),ctx=cv.getContext('2d'),dpr=1,drawing=false,strokes=[],cur=null,cw0=0,ch0=0,PEN=7;
-function strokePath(pts){
-  ctx.beginPath();
-  if(pts.length===1){ctx.moveTo(pts[0].x,pts[0].y);ctx.lineTo(pts[0].x+0.01,pts[0].y+0.01);ctx.stroke();return;}
-  ctx.moveTo(pts[0].x,pts[0].y);
+var cv=$('#pad'),ctx=cv.getContext('2d'),dpr=1,drawing=false,strokes=[],cur=null,cw0=0,ch0=0,PEN=2.4,PEN_SAVE=7;
+function strokePath(pts,c){
+  c.beginPath();
+  if(pts.length===1){c.moveTo(pts[0].x,pts[0].y);c.lineTo(pts[0].x+0.01,pts[0].y+0.01);c.stroke();return;}
+  c.moveTo(pts[0].x,pts[0].y);
   for(var i=1;i<pts.length-1;i++){
-    ctx.quadraticCurveTo(pts[i].x,pts[i].y,(pts[i].x+pts[i+1].x)/2,(pts[i].y+pts[i+1].y)/2);
+    c.quadraticCurveTo(pts[i].x,pts[i].y,(pts[i].x+pts[i+1].x)/2,(pts[i].y+pts[i+1].y)/2);
   }
-  ctx.lineTo(pts[pts.length-1].x,pts[pts.length-1].y);
-  ctx.stroke();
+  c.lineTo(pts[pts.length-1].x,pts[pts.length-1].y);
+  c.stroke();
 }
 function redraw(){
   ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,cv.width,cv.height);
   ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.lineCap='round';ctx.lineJoin='round';ctx.lineWidth=PEN;ctx.strokeStyle='#111111';
-  strokes.forEach(strokePath);
+  strokes.forEach(function(s){strokePath(s,ctx);});
 }
 function syncPad(){
   var has=strokes.length>0;
@@ -495,7 +523,12 @@ if(window.ResizeObserver){
   window.addEventListener('resize',function(){if(!$('#padSheet').hidden)fitCanvas();});
 }
 function exportSig(){
-  var w=cv.width,h=cv.height,data=ctx.getImageData(0,0,w,h).data;
+  var w=cv.width,h=cv.height;
+  var off=document.createElement('canvas');off.width=w;off.height=h;
+  var oc=off.getContext('2d');
+  oc.setTransform(dpr,0,0,dpr,0,0);oc.lineCap='round';oc.lineJoin='round';oc.lineWidth=PEN_SAVE;oc.strokeStyle='#111111';
+  strokes.forEach(function(st){strokePath(st,oc);});
+  var data=oc.getImageData(0,0,w,h).data;
   var minX=w,minY=h,maxX=-1,maxY=-1,x,y;
   for(y=0;y<h;y++){for(x=0;x<w;x++){
     if(data[(y*w+x)*4+3]>10){if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;}
@@ -505,7 +538,7 @@ function exportSig(){
   minX=Math.max(0,minX-m);minY=Math.max(0,minY-m);maxX=Math.min(w-1,maxX+m);maxY=Math.min(h-1,maxY+m);
   var cw=maxX-minX+1,ch=maxY-minY+1,out=document.createElement('canvas');
   out.width=cw;out.height=ch;
-  out.getContext('2d').drawImage(cv,minX,minY,cw,ch,0,0,cw,ch);
+  out.getContext('2d').drawImage(off,minX,minY,cw,ch,0,0,cw,ch);
   return{url:out.toDataURL('image/png'),w:cw,h:ch};
 }
 $('#padUndo').addEventListener('click',function(){strokes.pop();redraw();syncPad();});
@@ -595,10 +628,17 @@ function buildPdf(){
     doc.setFont('times','normal');doc.setFontSize(8);
     doc.text(String(d),(cx[0]+cx[1])/2,ty,{align:'center'});
     if(d>max)continue;
-    var arr=sheet.t[d]||[];
-    doc.setFont('helvetica','normal');doc.setFontSize(8.5);
-    turnoIdx().forEach(function(c){if(arr[c])doc.text(arr[c],(cx[c+1]+cx[c+2])/2,ty,{align:'center'});});
-    if(sheet.s[d]&&sig)placeSig(doc,cx[7]+0.8,ry+0.3,cx[8]-cx[7]-1.6,rh-0.6,1.5);
+    var mkd=sheet.mark[d];
+    if(mkd){
+      var wd=MK[mkd].toUpperCase();
+      doc.setFont('helvetica','bold');fitText(doc,wd,cx[3]-cx[2]-2.5,8,5.5);
+      turnoIdx().forEach(function(c){doc.text(wd,(cx[c+1]+cx[c+2])/2,ty,{align:'center'});});
+    }else{
+      var arr=sheet.t[d]||[];
+      doc.setFont('helvetica','normal');doc.setFontSize(8.5);
+      turnoIdx().forEach(function(c){if(arr[c])doc.text(arr[c],(cx[c+1]+cx[c+2])/2,ty,{align:'center'});});
+    }
+    if(sheet.s[d]&&sig&&mkd!=='falta')placeSig(doc,cx[7]+0.8,ry+0.3,cx[8]-cx[7]-1.6,rh-0.6,1.5);
   }
 
   /* resumo geral e assinatura do empregado */
@@ -670,7 +710,56 @@ $('#outSave').addEventListener('click',function(){
 document.addEventListener('keydown',function(e){
   if(e.key!=='Escape')return;
   if(!$('#padSheet').hidden){pending=null;closePad();}
+  if(!$('#calSheet').hidden)closeCal();
   if(!$('#outSheet').hidden){$('#outSheet').hidden=true;document.body.style.overflow='';}
+});
+
+/* ---------- Férias, Falta e Atestado ---------- */
+var calKind=null,calA=0,calB=0;
+function buildCal(){
+  var box=$('#cal'),i;box.innerHTML='';
+  SEM.forEach(function(n){var sp=document.createElement('span');sp.className='dw';sp.textContent=n;box.appendChild(sp);});
+  var first=new Date(ano,mes-1,1).getDay(),max=dim();
+  for(i=0;i<first;i++){var bl=document.createElement('span');bl.className='blank';box.appendChild(bl);}
+  for(i=1;i<=max;i++){var b=document.createElement('button');b.type='button';b.textContent=i;b.dataset.d=i;box.appendChild(b);}
+}
+function syncCal(){
+  var btns=$('#cal').querySelectorAll('button'),hi=calB||calA,i,d;
+  for(i=0;i<btns.length;i++){
+    d=+btns[i].dataset.d;
+    btns[i].classList.toggle('in',!!calA&&d>=calA&&d<=hi);
+    btns[i].classList.toggle('edge',d===calA||d===calB);
+  }
+  var info=$('#calInfo');
+  if(!calA)info.textContent='Toque no primeiro dia.';
+  else if(!calB)info.textContent='Dia '+calA+'. Agora toque no último dia, ou marque só este.';
+  else info.textContent='Do dia '+calA+' ao dia '+calB+' ('+(calB-calA+1)+(calB===calA?' dia)':' dias)');
+  $('#calApply').disabled=!calA;
+}
+function openCal(k){
+  calKind=k;calA=0;calB=0;
+  $('#calT').textContent=MK[k];
+  $('#calMonth').textContent=MESES[mes-1]+' de '+ano;
+  buildCal();syncCal();
+  $('#calSheet').hidden=false;document.body.style.overflow='hidden';
+}
+function closeCal(){$('#calSheet').hidden=true;document.body.style.overflow='';}
+$('#cal').addEventListener('click',function(e){
+  var b=e.target.closest?e.target.closest('button'):null;if(!b)return;
+  var d=+b.dataset.d;
+  if(!calA||calB){calA=d;calB=0;}
+  else{calB=d;if(calB<calA){var t=calA;calA=calB;calB=t;}}
+  syncCal();
+});
+$('#calApply').addEventListener('click',function(){
+  var hi=calB||calA,n=0,d;
+  for(d=calA;d<=hi;d++){sheet.mark[d]=calKind;n++;}
+  save();paint();closeCal();
+  toast(MK[calKind]+': '+n+(n===1?' dia marcado':' dias marcados'));
+});
+$('#calCancel').addEventListener('click',closeCal);
+Array.prototype.forEach.call(document.querySelectorAll('.mkb'),function(b){
+  b.addEventListener('click',function(){openCal(this.dataset.k);});
 });
 
 loadSheet();paint();
