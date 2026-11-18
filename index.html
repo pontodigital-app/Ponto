@@ -135,7 +135,6 @@ input.t.bad{border-color:var(--bad);background:var(--bad-bg)}
 @media (prefers-reduced-motion:reduce){.toast{transition:none}}
 .mkgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
 .mkb{padding:0 8px}
-.day.k-falta .mk{grid-column:2/4}
 .mk{display:none;grid-column:2;align-items:center;justify-content:space-between;gap:8px;min-height:44px;padding:0 6px 0 12px;border-radius:8px;background:var(--bg);border:1px dashed var(--line)}
 .mkt{font:700 15px var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
 .day.k-ferias .mkt{color:var(--ok)}
@@ -143,7 +142,6 @@ input.t.bad{border-color:var(--bad);background:var(--bad-bg)}
 .mkx{min-height:36px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font:600 13px var(--body);cursor:pointer}
 .day.marked .mk{display:flex}
 .day.marked .tm{display:none}
-.day.k-falta .sg{display:none}
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .cal .dw{text-align:center;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;padding:4px 0}
 .cal button{height:44px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg);font:600 15px var(--body);font-variant-numeric:tabular-nums;cursor:pointer;padding:0}
@@ -158,7 +156,7 @@ input.t.bad{border-color:var(--bad);background:var(--bad-bg)}
 <div class="wrap">
   <header class="top">
     <h1>Folha de Ponto</h1>
-    <p>Registro de Frequência · JURISEG Segurança e Vigilância. Digite entrada e saída no dia em que acontecer. Tudo fica só neste aparelho.</p>
+    <p>Registro de Frequência · JURISEG Segurança e Vigilância. Tudo fica só neste aparelho.</p>
   </header>
 
   <section class="card" aria-label="Dados da folha">
@@ -170,8 +168,8 @@ input.t.bad{border-color:var(--bad);background:var(--bad-bg)}
       <div class="f full" role="radiogroup" aria-label="Seu turno">
         <span>Seu turno</span>
         <div class="seg">
-          <label class="opt"><input type="radio" name="turno" value="1"><span><b>1º turno</b><small>Com intervalo: entrada, saída, entrada, saída</small></span></label>
-          <label class="opt"><input type="radio" name="turno" value="2"><span><b>2º turno</b><small>Direto, sem intervalo: entrada e saída</small></span></label>
+          <label class="opt"><input type="radio" name="turno" value="1"><span><b>1º turno</b><small>Entrada, saída, entrada, saída</small></span></label>
+          <label class="opt"><input type="radio" name="turno" value="2"><span><b>2º turno</b><small>Entrada e saída</small></span></label>
         </div>
       </div>
     </div>
@@ -195,7 +193,7 @@ input.t.bad{border-color:var(--bad);background:var(--bad-bg)}
       <button type="button" class="btn mkb" data-k="falta">Falta</button>
       <button type="button" class="btn mkb" data-k="atestado">Atestado</button>
     </div>
-    <p class="hint">Toque em um deles e escolha no calendário o primeiro e o último dia. A palavra entra nos horários do seu turno, nesses dias. Em férias e atestado você assina normal; na falta não assina.</p>
+    <p class="hint">Toque em um deles e escolha no calendário o primeiro e o último dia. A palavra entra nos horários do seu turno, nesses dias.</p>
     <div class="rowbtns">
       <button type="button" id="btnAll" class="btn">Assinar dias preenchidos</button>
       <button type="button" id="btnClear" class="btn ghost">Limpar o mês</button>
@@ -638,7 +636,7 @@ function buildPdf(){
       doc.setFont('helvetica','normal');doc.setFontSize(8.5);
       turnoIdx().forEach(function(c){if(arr[c])doc.text(arr[c],(cx[c+1]+cx[c+2])/2,ty,{align:'center'});});
     }
-    if(sheet.s[d]&&sig&&mkd!=='falta')placeSig(doc,cx[7]+0.8,ry+0.3,cx[8]-cx[7]-1.6,rh-0.6,1.5);
+    if(sheet.s[d]&&sig)placeSig(doc,cx[7]+0.8,ry+0.3,cx[8]-cx[7]-1.6,rh-0.6,1.5);
   }
 
   /* resumo geral e assinatura do empregado */
